@@ -43,6 +43,59 @@ export type ClientRow = {
   next_billing_date: string | null;
 };
 
+export type ClientsPage = {
+  items: ClientRow[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type ClientDetail = {
+  client: ClientRow;
+  subscription_status: string;
+  messages_used: number;
+  period_start: string | null;
+  last_reminder_sent: string | null;
+  support_email: string | null;
+  support_whatsapp: string | null;
+  conversations: number;
+  conversations_needing_human: number;
+  last_conversation_at: string | null;
+  users: {
+    id: number;
+    email: string;
+    full_name: string | null;
+    phone: string | null;
+    role: string;
+    is_active: boolean;
+    is_email_verified: boolean;
+    last_seen_at: string | null;
+    created_at: string | null;
+  }[];
+  bots: {
+    id: number;
+    name: string;
+    is_active: boolean;
+    chat_model: string | null;
+    handoff_mode: string;
+    whatsapp_number: string | null;
+    knowledge_sources: number;
+    channels: string[];
+    created_at: string | null;
+  }[];
+  payments: {
+    id: number;
+    plan_slug: string;
+    amount_cents: number;
+    method: string;
+    status: string;
+    sandbox: boolean;
+    reference_note: string | null;
+    paid_at: string | null;
+    created_at: string | null;
+  }[];
+};
+
 export type PackageUpsert = Omit<Package, "id">;
 
 // ----- client-facing -----
@@ -80,6 +133,14 @@ export async function adminDeletePackage(id: number): Promise<void> {
 }
 export async function adminListClients(): Promise<ClientRow[]> {
   return (await api.get("/admin/clients")).data;
+}
+export async function adminListClientsPaged(page: number, pageSize: number, q?: string): Promise<ClientsPage> {
+  const params: Record<string, string | number> = { page, page_size: pageSize };
+  if (q) params.q = q;
+  return (await api.get("/admin/clients/paged", { params })).data;
+}
+export async function adminGetClient(orgId: number): Promise<ClientDetail> {
+  return (await api.get(`/admin/clients/${orgId}`)).data;
 }
 export async function adminSetClientPlan(orgId: number, packageSlug: string): Promise<ClientRow> {
   return (await api.put(`/admin/clients/${orgId}/plan`, { package_slug: packageSlug })).data;
