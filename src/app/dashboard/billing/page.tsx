@@ -16,7 +16,7 @@ import {
   type BankTransferSettings,
   type Gateways,
 } from "@/lib/billing";
-import { price } from "@/lib/money";
+import { price, priceFromCents } from "@/lib/money";
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
@@ -127,6 +127,11 @@ export default function BillingPage() {
       .catch((err: any) => toast.error(err?.response?.data?.detail || "Could not confirm the PayPal payment", { id: "pp" }));
   };
 
+  const disc = sub?.referral_discount_percent ?? 0;
+  /** Price after the referral discount, same whole-cent rounding as the server. */
+  const net = (amount: number, currency?: string) =>
+    disc === 0 ? price(amount, currency) : disc >= 100 ? "Free" : priceFromCents(Math.floor((amount * 100 * (100 - disc)) / 100), currency);
+
   const onSubscribe = async (slug: string, gateway?: "billplz" | "paypal") => {
     setBusy(slug);
     try {
@@ -219,7 +224,7 @@ export default function BillingPage() {
               {daysToDue! < 0 ? "Your payment is overdue" : "Your payment is due soon"}
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-300">
-              {currentPkg.name} plan · {price(currentPkg.price_myr, currentPkg.currency)} ·{" "}
+              {currentPkg.name} plan · {net(currentPkg.price_myr, currentPkg.currency)}{disc > 0 && disc < 100 ? ` (${disc}% referral discount)` : ""} ·{" "}
               {daysToDue! < 0 ? `was due ${Math.abs(daysToDue!)} day(s) ago` : `due in ${daysToDue} day(s)`}
             </div>
           </div>
@@ -229,7 +234,7 @@ export default function BillingPage() {
               onClick={() => onSubscribe(currentPkg.slug, primaryGateway)}
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
             >
-              {busy === currentPkg.slug ? "…" : `Pay ${price(currentPkg.price_myr, currentPkg.currency)} now`}
+              {busy === currentPkg.slug ? "…" : disc >= 100 ? "Renew free (referral reward)" : `Pay ${net(currentPkg.price_myr, currentPkg.currency)} now`}
             </button>
             {gateways?.billplz && gateways.paypal && (
               <button
@@ -273,7 +278,9 @@ export default function BillingPage() {
                 )}
               </div>
               <div className="mt-2 text-2xl font-bold">
-                {p.price_myr === 0 ? "Free" : <>{price(p.price_myr, p.currency)}<span className="text-sm font-normal text-slate-500">/mo</span></>}
+                {p.price_myr === 0 ? "Free" : <>
+                  {disc > 0 && <span className="mr-2 text-base font-normal text-slate-400 line-through">{price(p.price_myr, p.currency)}</span>}
+                  {net(p.price_myr, p.currency)}<span className="text-sm font-normal text-slate-500">/mo</span></>}
               </div>
               <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                 <Zap size={12} /> {fmt(p.monthly_token_quota)} tokens · {p.max_bots} bot(s)

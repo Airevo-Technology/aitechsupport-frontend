@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AppToaster from "@/components/AppToaster";
 import CookieConsent from "@/components/CookieConsent";
+import ReferralCapture from "@/components/ReferralCapture";
 import StagingBanner, { IS_STAGING } from "@/components/StagingBanner";
 import { SITE_URL, SITE_HOST, PROFILE } from "@/lib/site";
 
@@ -57,6 +58,7 @@ export default async function RootLayout({
       <body className="antialiased">
         {children}
         <StagingBanner />
+        <ReferralCapture />
         <AppToaster />
         <CookieConsent />
         {widget?.enabled && widget.src && widget.public_key && (

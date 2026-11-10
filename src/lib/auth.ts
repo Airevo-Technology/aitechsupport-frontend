@@ -1,3 +1,4 @@
+import { storedReferral } from "./referral";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { api, API_URL, TOKEN_KEY } from "./api";
@@ -61,6 +62,7 @@ export async function register(
     password,
     full_name: fullName || null,
     phone: phone || null,
+    referral_code: storedReferral(),
   });
   setToken(res.data.access_token);
 }
@@ -108,6 +110,7 @@ export async function checkoutSignup(
     full_name: fullName || null,
     phone: phone || null,
     plan_slug: planSlug,
+    referral_code: storedReferral(),
   });
 }
 

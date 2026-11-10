@@ -30,6 +30,8 @@ export type Subscription = {
   max_bots: number;
   period_start: string | null;
   next_billing_date: string | null;
+  /** 0-100: % off every paid checkout/renewal from active paid referrals. */
+  referral_discount_percent: number;
 };
 
 export type ClientRow = {
@@ -118,6 +120,19 @@ export type CheckoutResult = {
 };
 export async function checkout(packageSlug: string, gateway?: "billplz" | "paypal"): Promise<CheckoutResult> {
   return (await api.post("/billing/checkout", { package_slug: packageSlug, gateway })).data;
+}
+
+export type ReferralInfo = {
+  code: string;
+  link: string;
+  percent_each: number;
+  active_referrals: number;
+  total_referrals: number;
+  discount_percent: number;
+  referrals: { name: string; joined: string; plan: string; counts: boolean }[];
+};
+export async function getReferralInfo(): Promise<ReferralInfo> {
+  return (await api.get("/billing/referral")).data;
 }
 
 export type Gateways = { currency: string; billplz: boolean; paypal: boolean; bank_transfer: boolean };
