@@ -21,9 +21,12 @@ export type SettingsOut = {
   evolution_api_key_set: boolean;
   evolution_api_key_hint: string | null;
   whatsapp_default_provider: "fonnte" | "evolution";
-  paypal_client_id: string;
-  paypal_client_secret_set: boolean;
-  paypal_client_secret_hint: string | null;
+  paypal_live_client_id: string;
+  paypal_live_client_secret_set: boolean;
+  paypal_live_client_secret_hint: string | null;
+  paypal_sandbox_client_id: string;
+  paypal_sandbox_client_secret_set: boolean;
+  paypal_sandbox_client_secret_hint: string | null;
   paypal_enabled: boolean;
   paypal_sandbox: boolean;
   billing_currency: string;
@@ -45,8 +48,10 @@ export type SettingsUpdate = {
   evolution_base_url?: string;
   evolution_api_key?: string;
   whatsapp_default_provider?: "fonnte" | "evolution";
-  paypal_client_id?: string;
-  paypal_client_secret?: string;
+  paypal_live_client_id?: string;
+  paypal_live_client_secret?: string;
+  paypal_sandbox_client_id?: string;
+  paypal_sandbox_client_secret?: string;
   paypal_enabled?: boolean;
   paypal_sandbox?: boolean;
   billing_currency?: string;
@@ -57,8 +62,8 @@ export async function getSettings(): Promise<SettingsOut> {
   return res.data;
 }
 
-export async function testPaypal(): Promise<void> {
-  await api.post("/admin/paypal/test");
+export async function testPaypal(mode?: "sandbox" | "live"): Promise<void> {
+  await api.post("/admin/paypal/test", null, { params: mode ? { mode } : undefined });
 }
 
 export async function updateSettings(payload: SettingsUpdate): Promise<SettingsOut> {

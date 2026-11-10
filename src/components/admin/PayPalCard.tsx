@@ -21,17 +21,20 @@ export default function PayPalCard() {
   const [s, setS] = useState<SettingsOut | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [sandbox, setSandbox] = useState(true);
-  const [clientId, setClientId] = useState("");
-  const [secret, setSecret] = useState("");
+  const [liveId, setLiveId] = useState("");
+  const [liveSecret, setLiveSecret] = useState("");
+  const [sbId, setSbId] = useState("");
+  const [sbSecret, setSbSecret] = useState("");
   const [currency, setCurrency] = useState("MYR");
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
+  const [testing, setTesting] = useState<"sandbox" | "live" | null>(null);
 
   const apply = (cfg: SettingsOut) => {
     setS(cfg);
     setEnabled(cfg.paypal_enabled);
     setSandbox(cfg.paypal_sandbox);
-    setClientId(cfg.paypal_client_id);
+    setLiveId(cfg.paypal_live_client_id);
+    setSbId(cfg.paypal_sandbox_client_id);
     setCurrency(cfg.billing_currency);
   };
 
@@ -49,14 +52,17 @@ export default function PayPalCard() {
     try {
       apply(
         await updateSettings({
-          paypal_client_id: clientId.trim(),
-          paypal_client_secret: secret.trim() || undefined,
+          paypal_live_client_id: liveId.trim(),
+          paypal_live_client_secret: liveSecret.trim() || undefined,
+          paypal_sandbox_client_id: sbId.trim(),
+          paypal_sandbox_client_secret: sbSecret.trim() || undefined,
           paypal_enabled: enabled,
           paypal_sandbox: sandbox,
           billing_currency: currency,
         }),
       );
-      setSecret("");
+      setLiveSecret("");
+      setSbSecret("");
       toast.success("PayPal settings saved");
     } catch {
       toast.error("Failed to save PayPal settings");
@@ -65,15 +71,15 @@ export default function PayPalCard() {
     }
   };
 
-  const test = async () => {
-    setTesting(true);
+  const test = async (mode: "sandbox" | "live") => {
+    setTesting(mode);
     try {
-      await testPaypal();
-      toast.success(`Connected to PayPal ${sandbox ? "sandbox" : "live"} ✅`);
+      await testPaypal(mode);
+      toast.success(`Connected to PayPal ${mode} ✅`);
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || "PayPal test failed. Save first, then test.");
     } finally {
-      setTesting(false);
+      setTesting(null);
     }
   };
 
@@ -114,26 +120,49 @@ export default function PayPalCard() {
           Sandbox mode (test payments only, no real charges)
         </label>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 flex items-center text-sm font-medium">Client ID <SetBadge ok={!!s.paypal_client_id} /></label>
-            <input value={clientId} onChange={(e) => setClientId(e.target.value)} className={`${inputCls} font-mono`} autoComplete="off" placeholder="PayPal app client ID" />
-          </div>
-          <div>
-            <label className="mb-1 flex items-center text-sm font-medium">Client secret <SetBadge ok={s.paypal_client_secret_set} /></label>
-            <input
-              type="password"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-              className={`${inputCls} font-mono`}
-              autoComplete="new-password"
-              placeholder={s.paypal_client_secret_set ? `•••••• (unchanged) ${s.paypal_client_secret_hint ?? ""}` : "PayPal app secret"}
-            />
-          </div>
-        </div>
+        {([
+          { mode: "live", title: "Live credentials", id: liveId, setId: setLiveId, secret: liveSecret, setSecret: setLiveSecret, isSet: s.paypal_live_client_secret_set, hint: s.paypal_live_client_secret_hint },
+          { mode: "sandbox", title: "Sandbox credentials", id: sbId, setId: setSbId, secret: sbSecret, setSecret: setSbSecret, isSet: s.paypal_sandbox_client_secret_set, hint: s.paypal_sandbox_client_secret_hint },
+        ] as const).map((c) => {
+          const active = (c.mode === "sandbox") === sandbox;
+          return (
+            <div key={c.mode} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+                {c.title}
+                {active && <span className="text-xs font-normal text-emerald-600">(active)</span>}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 flex items-center text-sm font-medium">Client ID <SetBadge ok={!!c.id} /></label>
+                  <input value={c.id} onChange={(e) => c.setId(e.target.value)} className={`${inputCls} font-mono`} autoComplete="off" placeholder={`PayPal ${c.mode} client ID`} />
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center text-sm font-medium">Client secret <SetBadge ok={c.isSet} /></label>
+                  <input
+                    type="password"
+                    value={c.secret}
+                    onChange={(e) => c.setSecret(e.target.value)}
+                    className={`${inputCls} font-mono`}
+                    autoComplete="new-password"
+                    placeholder={c.isSet ? `•••••• (unchanged) ${c.hint ?? ""}` : `PayPal ${c.mode} secret`}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => test(c.mode)}
+                disabled={testing !== null}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <PlugZap size={13} /> {testing === c.mode ? "Testing…" : `Test saved ${c.mode} credentials`}
+              </button>
+            </div>
+          );
+        })}
         <p className="text-xs text-slate-400">
-          Sandbox and live use different PayPal apps with different credentials. The saved pair is used for whichever mode is selected,
-          so replace both when you switch to live.
+          Sandbox and live are separate PayPal apps, each with its own Client ID and secret. Both stay saved; the
+          Sandbox checkbox above only switches which pair checkout uses.
         </p>
 
         <label className="flex items-center gap-2 text-sm font-medium">
@@ -145,9 +174,6 @@ export default function PayPalCard() {
           <button type="submit" disabled={saving} className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
             {saving ? "Saving…" : "Save PayPal settings"}
           </button>
-          <button type="button" onClick={test} disabled={testing} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800">
-            <PlugZap size={15} /> {testing ? "Testing…" : "Test saved credentials"}
-          </button>
         </div>
       </form>
 
@@ -155,10 +181,10 @@ export default function PayPalCard() {
         <p className="font-medium text-slate-600 dark:text-slate-300">Setup checklist</p>
         <ol className="mt-2 list-decimal space-y-1 pl-4">
           <li>At developer.paypal.com, open <strong>Apps &amp; Credentials</strong>, switch to <strong>Sandbox</strong>, and create an app.</li>
-          <li>Paste its Client ID and Secret above, tick <strong>Sandbox mode</strong> and <strong>Enable PayPal checkout</strong>, save, then <strong>Test saved credentials</strong>.</li>
+          <li>Paste its Client ID and Secret into the Sandbox credentials above, tick <strong>Sandbox mode</strong> and <strong>Enable PayPal checkout</strong>, save, then use <strong>Test saved sandbox credentials</strong>.</li>
           <li>Tick <strong>Billing enabled</strong> in the Billplz section above. It is the shared on/off switch for all online payments.</li>
           <li>Pay for a plan with a PayPal sandbox buyer account and confirm the plan activates.</li>
-          <li>To go live: create a <strong>Live</strong> app, replace the Client ID and Secret, untick Sandbox mode, and save.</li>
+          <li>To go live: create a <strong>Live</strong> app, paste its Client ID and Secret into the Live credentials, test them, then untick Sandbox mode and save.</li>
         </ol>
         <p className="mt-2">No webhook is needed: the payment is confirmed when the customer returns to the billing page.</p>
       </div>
