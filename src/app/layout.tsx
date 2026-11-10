@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AppToaster from "@/components/AppToaster";
 import CookieConsent from "@/components/CookieConsent";
+import StagingBanner, { IS_STAGING } from "@/components/StagingBanner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aichatsupport.my"),
@@ -25,7 +26,8 @@ export const metadata: Metadata = {
     title: "AiChatSupport — AI Support Chatbot",
     description: "AI support that answers on your website, with a real human handoff when it matters.",
   },
-  robots: { index: true, follow: true },
+  // Staging must never be indexed.
+  robots: { index: !IS_STAGING, follow: !IS_STAGING },
 };
 
 // Our own support widget, configured in Admin → Support. Read at render time
@@ -53,6 +55,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className="antialiased">
         {children}
+        <StagingBanner />
         <AppToaster />
         <CookieConsent />
         {widget?.enabled && widget.src && widget.public_key && (
