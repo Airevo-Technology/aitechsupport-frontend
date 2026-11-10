@@ -127,6 +127,12 @@ export default function BillingPage() {
 
   const pct = sub.tokens_quota > 0 ? Math.min(100, Math.round((sub.tokens_used / sub.tokens_quota) * 100)) : 0;
   const low = sub.tokens_remaining <= sub.tokens_quota * 0.1;
+  const currentPkg = pkgs.find((p) => p.slug === sub.plan);
+  const isPaidPlan = (currentPkg?.price_myr ?? 0) > 0;
+  const daysToDue = sub.next_billing_date
+    ? Math.ceil((new Date(sub.next_billing_date).getTime() - Date.now()) / 86_400_000)
+    : null;
+  const dueSoon = isPaidPlan && daysToDue !== null && daysToDue <= 7;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -170,6 +176,38 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* Payment due banner */}
+      {dueSoon && currentPkg && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950/30">
+          <div className="text-sm">
+            <div className="font-semibold">
+              {daysToDue! < 0 ? "Your payment is overdue" : "Your payment is due soon"}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-300">
+              {currentPkg.name} plan · RM{currentPkg.price_myr} ·{" "}
+              {daysToDue! < 0 ? `was due ${Math.abs(daysToDue!)} day(s) ago` : `due in ${daysToDue} day(s)`}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={busy === currentPkg.slug}
+              onClick={() => onSubscribe(currentPkg.slug)}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {busy === currentPkg.slug ? "…" : `Pay RM${currentPkg.price_myr} now`}
+            </button>
+            {bankTransfer && (
+              <button
+                onClick={() => setReportingSlug(currentPkg.slug)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-white dark:border-slate-700"
+              >
+                <Banknote size={14} /> Bank transfer
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Plans */}
       <h2 className="mb-3 mt-8 text-sm font-semibold text-slate-500">Plans</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -204,17 +242,21 @@ export default function BillingPage() {
                 ))}
               </ul>
               <button
-                disabled={current || busy === p.slug}
+                disabled={(current && p.price_myr === 0) || busy === p.slug}
                 onClick={() => onSubscribe(p.slug)}
                 className={`mt-4 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-60 ${
-                  current
+                  current && p.price_myr === 0
                     ? "cursor-default bg-slate-100 text-slate-400 dark:bg-slate-800"
                     : "bg-indigo-600 text-white hover:bg-indigo-700"
                 }`}
               >
-                {current ? "Current plan" : busy === p.slug ? "…" : p.price_myr === 0 ? "Switch to Free" : "Choose plan"}
+                {busy === p.slug
+                  ? "…"
+                  : current
+                    ? p.price_myr === 0 ? "Current plan" : "Renew / pay now"
+                    : p.price_myr === 0 ? "Switch to Free" : "Choose plan"}
               </button>
-              {!current && p.price_myr > 0 && bankTransfer && (
+              {p.price_myr > 0 && bankTransfer && (
                 <button
                   onClick={() => setReportingSlug(p.slug)}
                   className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
