@@ -10,6 +10,7 @@ import { checkEmail, checkoutSignup, login, register } from "@/lib/auth";
 import { api, API_URL } from "@/lib/api";
 import type { Pkg } from "@/lib/content";
 import { price } from "@/lib/money";
+import { PROFILE } from "@/lib/site";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800";
@@ -48,6 +49,16 @@ function CheckoutForm() {
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   const isPaid = (plan?.price_myr ?? 0) > 0;
+
+  // Which online gateway this deployment uses (null while loading / none enabled).
+  const [gateway, setGateway] = useState<"billplz" | "paypal" | null>(null);
+  useEffect(() => {
+    fetch(`${API_URL}/api/v1/content/gateways`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((g) => setGateway(g?.primary ?? null))
+      .catch(() => setGateway(null));
+  }, []);
+  const gatewayName = gateway === "paypal" ? "PayPal" : "Billplz";
 
   useEffect(() => {
     fetch(`${API_URL}/api/v1/content/packages`)
@@ -236,7 +247,7 @@ function CheckoutForm() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className={inputCls}
-                    placeholder="+60 12-345 6789"
+                    placeholder={PROFILE.phonePlaceholder}
                   />
                 </div>
               </div>
@@ -264,7 +275,7 @@ function CheckoutForm() {
                 <>
                   <div>
                     <label className={labelCls}>Business / organization</label>
-                    <input value={org} onChange={(e) => setOrg(e.target.value)} className={inputCls} placeholder="Acme Sdn Bhd (optional)" />
+                    <input value={org} onChange={(e) => setOrg(e.target.value)} className={inputCls} placeholder={PROFILE.orgPlaceholder} />
                   </div>
                   {isPaid ? (
                     <div>
@@ -302,14 +313,18 @@ function CheckoutForm() {
                       <div className="flex items-center gap-2 text-sm font-medium">
                         <CreditCard size={16} className="text-indigo-600" />
                         Online Payment
-                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">via Billplz</span>
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">via {gatewayName}</span>
                       </div>
-                      <p className="mt-1 text-xs text-slate-500">Pay securely online via FPX (online banking) or credit/debit card.</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {gateway === "paypal"
+                          ? "Pay securely with your PayPal account or a credit/debit card."
+                          : "Pay securely online via FPX (online banking) or credit/debit card."}
+                      </p>
                     </div>
                   </label>
                   <div className="mt-3 flex items-start gap-2 rounded-lg bg-white/70 p-3 text-xs text-indigo-800 dark:bg-slate-900/50 dark:text-indigo-300">
                     <Info size={14} className="mt-0.5 shrink-0" />
-                    You&apos;ll be redirected to Billplz to complete your payment after this step.
+                    You&apos;ll be redirected to {gatewayName} to complete your payment after this step.
                   </div>
                 </div>
               </div>
