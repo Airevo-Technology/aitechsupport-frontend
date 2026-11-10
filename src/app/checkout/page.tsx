@@ -9,13 +9,14 @@ import Nav from "@/components/marketing/Nav";
 import { checkEmail, checkoutSignup, login, register } from "@/lib/auth";
 import { api, API_URL } from "@/lib/api";
 import type { Pkg } from "@/lib/content";
+import { price } from "@/lib/money";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800";
 const labelCls = "mb-1 block text-sm font-medium";
 
 function priceLabel(p: Pkg): string {
-  return p.price_myr === 0 ? "Free" : `RM${p.price_myr}`;
+  return p.price_myr === 0 ? "Free" : price(p.price_myr, p.currency);
 }
 
 function StepBadge({ n }: { n: number }) {
@@ -329,7 +330,7 @@ function CheckoutForm() {
                 </ul>
                 <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-base font-semibold dark:border-slate-800">
                   <span>Total due today</span>
-                  <span>{plan.price_myr === 0 ? "RM0" : priceLabel(plan)}</span>
+                  <span>{plan.price_myr === 0 ? price(0, plan.currency) : priceLabel(plan)}</span>
                 </div>
               </>
             ) : (

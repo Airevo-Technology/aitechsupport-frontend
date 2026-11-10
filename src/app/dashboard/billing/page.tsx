@@ -7,12 +7,16 @@ import {
   listPackages,
   getSubscription,
   checkout,
+  getGateways,
+  paypalCapture,
   getBankTransfer,
   reportBankTransfer,
   type Package,
   type Subscription,
   type BankTransferSettings,
+  type Gateways,
 } from "@/lib/billing";
+import { price } from "@/lib/money";
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
@@ -25,6 +29,7 @@ export default function BillingPage() {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [gateways, setGateways] = useState<Gateways | null>(null);
   const [bankTransfer, setBankTransfer] = useState<BankTransferSettings | null>(null);
   const [reportingSlug, setReportingSlug] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -34,6 +39,7 @@ export default function BillingPage() {
     const [p, s] = await Promise.all([listPackages(), getSubscription()]);
     setPkgs(p);
     setSub(s);
+    getGateways().then(setGateways).catch(() => setGateways(null));
     try {
       const bt = await getBankTransfer();
       if (bt.configured) setBankTransfer(bt);
@@ -47,6 +53,7 @@ export default function BillingPage() {
       .catch(() => toast.error("Failed to load billing"))
       .finally(() => setLoading(false));
     handleBillplzReturn();
+    handlePaypalReturn();
   }, []);
 
   const submitBankTransfer = async () => {
@@ -94,13 +101,39 @@ export default function BillingPage() {
     }
   };
 
-  const onSubscribe = async (slug: string) => {
+  // PayPal redirects back with ?gateway=paypal&token=<order id>&PayerID=… once the
+  // payer approves (or &cancelled=1). The capture call is what confirms payment.
+  const handlePaypalReturn = () => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("gateway") !== "paypal") return;
+    const orderId = params.get("token");
+    const cancelled = params.get("cancelled") === "1";
+    window.history.replaceState({}, "", window.location.pathname);
+    if (cancelled || !orderId) {
+      toast.error("Payment wasn't completed. You can try again below.");
+      return;
+    }
+    toast.loading("Confirming your PayPal payment…", { id: "pp" });
+    paypalCapture(orderId)
+      .then(async (r) => {
+        if (r.status === "not-paid") {
+          toast.error("PayPal hasn't confirmed the payment yet. Please try again.", { id: "pp" });
+          return;
+        }
+        toast.success("Payment received — your plan is active.", { id: "pp" });
+        setSub(await getSubscription());
+      })
+      .catch((err: any) => toast.error(err?.response?.data?.detail || "Could not confirm the PayPal payment", { id: "pp" }));
+  };
+
+  const onSubscribe = async (slug: string, gateway?: "billplz" | "paypal") => {
     setBusy(slug);
     try {
-      const res = await checkout(slug);
+      const res = await checkout(slug, gateway);
       if (res.payment_url) {
         // Paid plan — hand off to Billplz to collect payment.
-        toast.loading("Redirecting to secure payment…", { id: "pay" });
+        toast.loading(gateway === "paypal" ? "Redirecting to PayPal…" : "Redirecting to secure payment…", { id: "pay" });
         window.location.href = res.payment_url;
         return;
       }
@@ -132,6 +165,8 @@ export default function BillingPage() {
   const daysToDue = sub.next_billing_date
     ? Math.ceil((new Date(sub.next_billing_date).getTime() - Date.now()) / 86_400_000)
     : null;
+  // Billplz (MYR) is the default when live; otherwise PayPal.
+  const primaryGateway: "billplz" | "paypal" | undefined = gateways?.billplz ? "billplz" : gateways?.paypal ? "paypal" : undefined;
   const dueSoon = isPaidPlan && daysToDue !== null && daysToDue <= 7;
 
   return (
@@ -184,18 +219,27 @@ export default function BillingPage() {
               {daysToDue! < 0 ? "Your payment is overdue" : "Your payment is due soon"}
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-300">
-              {currentPkg.name} plan · RM{currentPkg.price_myr} ·{" "}
+              {currentPkg.name} plan · {price(currentPkg.price_myr, currentPkg.currency)} ·{" "}
               {daysToDue! < 0 ? `was due ${Math.abs(daysToDue!)} day(s) ago` : `due in ${daysToDue} day(s)`}
             </div>
           </div>
           <div className="flex gap-2">
             <button
               disabled={busy === currentPkg.slug}
-              onClick={() => onSubscribe(currentPkg.slug)}
+              onClick={() => onSubscribe(currentPkg.slug, primaryGateway)}
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
             >
-              {busy === currentPkg.slug ? "…" : `Pay RM${currentPkg.price_myr} now`}
+              {busy === currentPkg.slug ? "…" : `Pay ${price(currentPkg.price_myr, currentPkg.currency)} now`}
             </button>
+            {gateways?.billplz && gateways.paypal && (
+              <button
+                disabled={busy === currentPkg.slug}
+                onClick={() => onSubscribe(currentPkg.slug, "paypal")}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-white disabled:opacity-60 dark:border-slate-700"
+              >
+                PayPal
+              </button>
+            )}
             {bankTransfer && (
               <button
                 onClick={() => setReportingSlug(currentPkg.slug)}
@@ -229,7 +273,7 @@ export default function BillingPage() {
                 )}
               </div>
               <div className="mt-2 text-2xl font-bold">
-                {p.price_myr === 0 ? "Free" : <>RM{p.price_myr}<span className="text-sm font-normal text-slate-500">/mo</span></>}
+                {p.price_myr === 0 ? "Free" : <>{price(p.price_myr, p.currency)}<span className="text-sm font-normal text-slate-500">/mo</span></>}
               </div>
               <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                 <Zap size={12} /> {fmt(p.monthly_token_quota)} tokens · {p.max_bots} bot(s)
@@ -243,7 +287,7 @@ export default function BillingPage() {
               </ul>
               <button
                 disabled={(current && p.price_myr === 0) || busy === p.slug}
-                onClick={() => onSubscribe(p.slug)}
+                onClick={() => onSubscribe(p.slug, primaryGateway)}
                 className={`mt-4 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-60 ${
                   current && p.price_myr === 0
                     ? "cursor-default bg-slate-100 text-slate-400 dark:bg-slate-800"
@@ -256,6 +300,15 @@ export default function BillingPage() {
                     ? p.price_myr === 0 ? "Current plan" : "Renew / pay now"
                     : p.price_myr === 0 ? "Switch to Free" : "Choose plan"}
               </button>
+              {p.price_myr > 0 && gateways?.billplz && gateways.paypal && (
+                <button
+                  disabled={busy === p.slug}
+                  onClick={() => onSubscribe(p.slug, "paypal")}
+                  className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Pay with PayPal
+                </button>
+              )}
               {p.price_myr > 0 && bankTransfer && (
                 <button
                   onClick={() => setReportingSlug(p.slug)}
@@ -269,7 +322,7 @@ export default function BillingPage() {
         })}
       </div>
       <p className="mt-4 text-xs text-slate-500">
-        Paid plans are billed securely through Billplz (FPX / card){bankTransfer ? ", or by manual bank transfer" : ""}.
+        Paid plans are billed securely through {[gateways?.billplz && "Billplz (FPX / card)", gateways?.paypal && "PayPal", bankTransfer && "manual bank transfer"].filter(Boolean).join(", or ") || "our team"}.
         Your plan activates once payment is confirmed. Switching to Free takes effect immediately.
       </p>
 

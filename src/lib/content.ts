@@ -21,7 +21,8 @@ export interface Homepage {
 export interface Pkg {
   slug: string;
   name: string;
-  price_myr: number;
+  price_myr: number; // amount in `currency` (column name is historical)
+  currency?: string;
   monthly_token_quota: number;
   max_bots: number;
   features: string[];

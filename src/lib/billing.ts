@@ -16,6 +16,8 @@ export type Package = {
   /** Ordered chat fallback chain for this plan — models tried top to bottom until
    *  one answers. Null means it inherits the platform-wide chain from Settings. */
   fallback_chain: FallbackTier[] | null;
+  /** ISO currency price_myr is quoted in on this deployment (e.g. MYR, AUD). */
+  currency?: string;
 };
 
 export type Subscription = {
@@ -114,8 +116,16 @@ export type CheckoutResult = {
   bill_id: string | null;
   subscription: Subscription | null; // free plan / downgrade -> already applied
 };
-export async function checkout(packageSlug: string): Promise<CheckoutResult> {
-  return (await api.post("/billing/checkout", { package_slug: packageSlug })).data;
+export async function checkout(packageSlug: string, gateway?: "billplz" | "paypal"): Promise<CheckoutResult> {
+  return (await api.post("/billing/checkout", { package_slug: packageSlug, gateway })).data;
+}
+
+export type Gateways = { currency: string; billplz: boolean; paypal: boolean; bank_transfer: boolean };
+export async function getGateways(): Promise<Gateways> {
+  return (await api.get("/billing/gateways")).data;
+}
+export async function paypalCapture(orderId: string): Promise<{ status: "activated" | "already-paid" | "not-paid" }> {
+  return (await api.post("/billing/paypal/capture", { order_id: orderId })).data;
 }
 
 // ----- platform admin -----
@@ -191,10 +201,12 @@ export type PaymentRow = {
   organization_name: string | null;
   plan_slug: string;
   amount_cents: number;
-  method: string; // billplz | bank_transfer
+  currency: string;
+  method: string; // billplz | paypal | bank_transfer
   status: string; // pending | paid | failed
   sandbox: boolean;
   billplz_bill_id: string | null;
+  paypal_order_id: string | null;
   reference_note: string | null;
   reported_at: string | null;
   paid_at: string | null;
@@ -206,6 +218,7 @@ export type PaymentsSummary = {
   pending: number;
   failed: number;
   live_revenue_cents: number;
+  currency: string;
 };
 export type PaymentsResult = { summary: PaymentsSummary; payments: PaymentRow[] };
 

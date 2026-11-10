@@ -17,6 +17,16 @@ export type SettingsOut = {
   huggingface_api_key_set: boolean;
   huggingface_api_key_hint: string | null;
   embedding_model_huggingface: string;
+  evolution_base_url: string;
+  evolution_api_key_set: boolean;
+  evolution_api_key_hint: string | null;
+  whatsapp_default_provider: "fonnte" | "evolution";
+  paypal_client_id: string;
+  paypal_client_secret_set: boolean;
+  paypal_client_secret_hint: string | null;
+  paypal_enabled: boolean;
+  paypal_sandbox: boolean;
+  billing_currency: string;
 };
 
 export type SettingsUpdate = {
@@ -32,11 +42,23 @@ export type SettingsUpdate = {
   embedding_model_openrouter_fallback_2?: string;
   huggingface_api_key?: string;
   embedding_model_huggingface?: string;
+  evolution_base_url?: string;
+  evolution_api_key?: string;
+  whatsapp_default_provider?: "fonnte" | "evolution";
+  paypal_client_id?: string;
+  paypal_client_secret?: string;
+  paypal_enabled?: boolean;
+  paypal_sandbox?: boolean;
+  billing_currency?: string;
 };
 
 export async function getSettings(): Promise<SettingsOut> {
   const res = await api.get("/admin/settings");
   return res.data;
+}
+
+export async function testPaypal(): Promise<void> {
+  await api.post("/admin/paypal/test");
 }
 
 export async function updateSettings(payload: SettingsUpdate): Promise<SettingsOut> {

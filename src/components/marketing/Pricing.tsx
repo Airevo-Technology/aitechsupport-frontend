@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import type { Pkg } from "@/lib/content";
+import { price } from "@/lib/money";
 
 function priceLabel(p: Pkg): string {
-  return p.price_myr === 0 ? "Free" : `RM${p.price_myr}`;
+  return p.price_myr === 0 ? "Free" : price(p.price_myr, p.currency);
 }
 
 export default function Pricing({

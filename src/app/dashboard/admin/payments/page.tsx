@@ -1,5 +1,6 @@
 "use client";
 
+import { priceFromCents } from "@/lib/money";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Receipt, Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
@@ -12,8 +13,8 @@ import {
 
 const STATUSES = ["", "paid", "pending", "failed"] as const;
 
-function rm(cents: number): string {
-  return `RM${(cents / 100).toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function rm(cents: number, currency = "MYR"): string {
+  return priceFromCents(cents, currency);
 }
 function when(iso: string | null): string {
   if (!iso) return "—";
@@ -101,7 +102,7 @@ export default function AdminPaymentsPage() {
 
       {summary && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Stat label="Revenue (live)" value={rm(summary.live_revenue_cents)} accent />
+          <Stat label="Revenue (live)" value={rm(summary.live_revenue_cents, summary.currency)} accent />
           <Stat label="Paid" value={summary.paid} />
           <Stat label="Pending" value={summary.pending} />
           <Stat label="Failed" value={summary.failed} />
@@ -156,10 +157,10 @@ export default function AdminPaymentsPage() {
                     {r.method === "bank_transfer" ? (
                       <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">bank transfer</span>
                     ) : (
-                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800">billplz</span>
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800">{r.method}</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-medium">{rm(r.amount_cents)}</td>
+                  <td className="px-4 py-3 font-medium">{rm(r.amount_cents, r.currency)}</td>
                   <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                   <td className="px-4 py-3">
                     {r.sandbox ? (
@@ -170,8 +171,8 @@ export default function AdminPaymentsPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-500">{when(r.created_at)}</td>
                   <td className="px-4 py-3 text-slate-500">{when(r.paid_at)}</td>
-                  <td className="px-4 py-3 max-w-[220px] truncate font-mono text-xs text-slate-400" title={r.method === "bank_transfer" ? r.reference_note || "" : r.billplz_bill_id || ""}>
-                    {r.method === "bank_transfer" ? r.reference_note || "—" : r.billplz_bill_id || "—"}
+                  <td className="px-4 py-3 max-w-[220px] truncate font-mono text-xs text-slate-400" title={r.method === "bank_transfer" ? r.reference_note || "" : r.paypal_order_id || r.billplz_bill_id || ""}>
+                    {r.method === "bank_transfer" ? r.reference_note || "—" : r.paypal_order_id || r.billplz_bill_id || "—"}
                   </td>
                   <td className="px-4 py-3">
                     {r.method === "bank_transfer" && r.status === "pending" && (

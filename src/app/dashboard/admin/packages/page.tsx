@@ -1,5 +1,6 @@
 "use client";
 
+import { price } from "@/lib/money";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Boxes, Plus, Pencil, Trash2, Loader2, ShieldAlert } from "lucide-react";
@@ -221,7 +222,7 @@ export default function AdminPackagesPage() {
                   <div className="font-medium">{p.name}</div>
                   <div className="text-xs text-slate-400">{p.slug}</div>
                 </td>
-                <td className="px-4 py-3">{p.price_myr === 0 ? "Free" : `RM${p.price_myr}`}</td>
+                <td className="px-4 py-3">{p.price_myr === 0 ? "Free" : price(p.price_myr, p.currency)}</td>
                 <td className="px-4 py-3">{p.monthly_token_quota.toLocaleString()}</td>
                 <td className="px-4 py-3">{p.max_bots}</td>
                 <td className="px-4 py-3">
