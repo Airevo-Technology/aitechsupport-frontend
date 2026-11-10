@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { KeyRound, CheckCircle2, Circle, Loader2, ShieldAlert } from "lucide-react";
-import { getSettings, updateSettings, testPaypal, type SettingsOut } from "@/lib/settings";
+import { getSettings, updateSettings, type SettingsOut } from "@/lib/settings";
 import { listModels, type ModelOption } from "@/lib/bots";
 
 /** A secret field: shows whether it's already set (+hint), with an input to replace it. */
@@ -66,11 +67,6 @@ export default function SettingsPage() {
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionKey, setEvolutionKey] = useState("");
   const [waProvider, setWaProvider] = useState<"fonnte" | "evolution">("fonnte");
-  const [paypalClientId, setPaypalClientId] = useState("");
-  const [paypalSecret, setPaypalSecret] = useState("");
-  const [paypalEnabled, setPaypalEnabled] = useState(false);
-  const [paypalSandbox, setPaypalSandbox] = useState(true);
-  const [currency, setCurrency] = useState("MYR");
   const [embeddingsProvider, setEmbeddingsProvider] = useState<"voyage" | "openrouter" | "huggingface">("voyage");
   const [embeddingMain, setEmbeddingMain] = useState("");
   const [embeddingFallback1, setEmbeddingFallback1] = useState("");
@@ -91,10 +87,6 @@ export default function SettingsPage() {
       setEmbeddingHuggingface(s.embedding_model_huggingface);
       setEvolutionUrl(s.evolution_base_url);
       setWaProvider(s.whatsapp_default_provider);
-      setPaypalClientId(s.paypal_client_id);
-      setPaypalEnabled(s.paypal_enabled);
-      setPaypalSandbox(s.paypal_sandbox);
-      setCurrency(s.billing_currency);
       setModels(await listModels());
     } catch (err: any) {
       if (err?.response?.status === 403) setForbidden(true);
@@ -136,11 +128,6 @@ export default function SettingsPage() {
         evolution_base_url: evolutionUrl || undefined,
         evolution_api_key: evolutionKey || undefined,
         whatsapp_default_provider: waProvider,
-        paypal_client_id: paypalClientId || undefined,
-        paypal_client_secret: paypalSecret || undefined,
-        paypal_enabled: paypalEnabled,
-        paypal_sandbox: paypalSandbox,
-        billing_currency: currency || undefined,
       });
       setSettings(updated);
       setOpenrouterKey("");
@@ -148,7 +135,6 @@ export default function SettingsPage() {
       setHuggingfaceKey("");
       setFonnteToken("");
       setEvolutionKey("");
-      setPaypalSecret("");
       setEncryptionKey("");
       toast.success("Settings saved");
     } catch {
@@ -333,52 +319,10 @@ export default function SettingsPage() {
           onChange={setEvolutionKey}
         />
 
-        <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-          <div className="mb-3 text-sm font-semibold">Payments</div>
-          <label className="mb-1 block text-sm font-medium">Billing currency</label>
-          <input
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value.toUpperCase().slice(0, 3))}
-            placeholder="MYR"
-            className={`${inputCls} w-28 font-mono`}
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Currency this deployment&apos;s package prices are quoted in (MYR for Malaysia, AUD for Australia). Billplz
-            only collects MYR; PayPal collects whatever is set here.
-          </p>
-          <div className="mt-4 space-y-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">PayPal client ID</label>
-              <input value={paypalClientId} onChange={(e) => setPaypalClientId(e.target.value)} className={`${inputCls} font-mono`} />
-            </div>
-            <SecretField
-              label="PayPal client secret"
-              help="From your PayPal developer app (use sandbox credentials while testing)."
-              isSet={settings!.paypal_client_secret_set}
-              hint={settings!.paypal_client_secret_hint}
-              value={paypalSecret}
-              onChange={setPaypalSecret}
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={paypalSandbox} onChange={(e) => setPaypalSandbox(e.target.checked)} />
-              Sandbox mode (test payments only)
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={paypalEnabled} onChange={(e) => setPaypalEnabled(e.target.checked)} />
-              Enable PayPal checkout
-            </label>
-            <button
-              type="button"
-              onClick={() =>
-                testPaypal()
-                  .then(() => toast.success("PayPal credentials work"))
-                  .catch((err: any) => toast.error(err?.response?.data?.detail || "PayPal test failed — save first, then test"))
-              }
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-            >
-              Test saved credentials
-            </button>
-          </div>
+        <div className="rounded-xl border border-slate-200 p-4 text-sm dark:border-slate-800">
+          <div className="mb-1 font-semibold">Payments</div>
+          Billplz, PayPal and the billing currency are now configured on the{" "}
+          <Link href="/dashboard/admin/billing" className="text-indigo-600 underline">Payments page</Link>.
         </div>
 
         <SecretField

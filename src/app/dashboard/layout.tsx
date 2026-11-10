@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/admin", label: "Admin home", icon: LayoutDashboard },
     { href: "/dashboard/admin/packages", label: "Packages", icon: Boxes },
     { href: "/dashboard/admin/clients", label: "Clients", icon: Users },
-    { href: "/dashboard/admin/billing", label: "Payments (Billplz)", icon: CreditCard },
+    { href: "/dashboard/admin/billing", label: "Payments", icon: CreditCard },
     { href: "/dashboard/admin/payments", label: "Transactions", icon: Receipt },
     { href: "/dashboard/settings", label: "API Keys & Models", icon: KeyRound },
     { href: "/dashboard/admin/storage", label: "Storage", icon: HardDrive },

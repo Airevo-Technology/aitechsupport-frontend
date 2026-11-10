@@ -15,6 +15,7 @@ import {
   type BankTransferSettings,
   type WhatsappChannelOption,
 } from "@/lib/billing";
+import PayPalCard from "@/components/admin/PayPalCard";
 
 export default function BillplzPage() {
   const [s, setS] = useState<BillplzSettings | null>(null);
@@ -305,6 +306,8 @@ export default function BillplzPage() {
           <li>Toggle <strong>Sandbox mode</strong> on to trial checkout risk-free, then off to go live — both credential sets stay saved either way.</li>
         </ol>
       </div>
+
+      <PayPalCard />
 
       {/* ===== Bank transfer fallback ===== */}
       <div className="mb-6 mt-10 flex items-center gap-3">
