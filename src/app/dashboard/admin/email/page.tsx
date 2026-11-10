@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Mail, Send, Loader2, ShieldAlert, CheckCircle2, Circle } from "lucide-react";
 import { getSmtp, updateSmtp, sendTestEmail, type SMTPSettings } from "@/lib/email";
+import { SITE_HOST } from "@/lib/site";
 
 export default function SmtpPage() {
   const [s, setS] = useState<SMTPSettings | null>(null);
@@ -155,7 +156,7 @@ export default function SmtpPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-medium">From email</label>
-            <input value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} className={inputCls} placeholder="noreply@aichatsupport.my" />
+            <input value={fromEmail} onChange={(e) => setFromEmail(e.target.value)} className={inputCls} placeholder={`noreply@${SITE_HOST}`} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium">From name</label>

@@ -6,6 +6,7 @@ import { getHomepage, getPackages, getPageLinks, type Feature } from "@/lib/cont
 import Nav from "@/components/marketing/Nav";
 import Footer from "@/components/marketing/Footer";
 import Pricing from "@/components/marketing/Pricing";
+import { SITE_URL, SITE_HOST, PROFILE } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
   const h = await getHomepage();
@@ -38,7 +39,7 @@ export default async function Home() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description: h.meta_description,
-    offers: (packages ?? []).map((p) => ({ "@type": "Offer", name: p.name, price: p.price_myr, priceCurrency: "MYR" })),
+    offers: (packages ?? []).map((p) => ({ "@type": "Offer", name: p.name, price: p.price_myr, priceCurrency: PROFILE.currency })),
   };
 
   return (
@@ -128,7 +129,7 @@ export default async function Home() {
 
       <Script id="ld-json" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {h.demo_public_key && (
-        <Script src={`https://aichatsupport.my/widget/v1/widget.js`} data-public-key={h.demo_public_key} strategy="lazyOnload" />
+        <Script src={`${SITE_URL}/widget/v1/widget.js`} data-public-key={h.demo_public_key} strategy="lazyOnload" />
       )}
     </>
   );
@@ -143,8 +144,8 @@ function ChatPreview({ greeting }: { greeting: string }) {
       </div>
       <div className="space-y-3 p-4">
         <Bubble side="left">{greeting}</Bubble>
-        <Bubble side="right">Do you ship to Malaysia?</Bubble>
-        <Bubble side="left">Yes! Standard shipping to West Malaysia takes 2–3 working days. 🇲🇾</Bubble>
+        <Bubble side="right">{PROFILE.demoQuestion}</Bubble>
+        <Bubble side="left">{PROFILE.demoAnswer}</Bubble>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-400 dark:border-slate-700">
           Type your message…
         </div>

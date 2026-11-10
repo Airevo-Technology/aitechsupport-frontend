@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { SITE_URL, SITE_HOST, PROFILE } from "@/lib/site";
 
 export const alt = "AiChatSupport — AI Support Chatbot for your website & WhatsApp";
 export const size = { width: 1200, height: 630 };
@@ -44,7 +45,7 @@ export default function Image() {
         <div style={{ display: "flex", fontSize: 30, marginTop: 30, opacity: 0.85, maxWidth: 880 }}>
           Instant answers from your content — with a real human handoff when it matters.
         </div>
-        <div style={{ display: "flex", fontSize: 26, marginTop: 44, opacity: 0.7 }}>aichatsupport.my</div>
+        <div style={{ display: "flex", fontSize: 26, marginTop: 44, opacity: 0.7 }}>{SITE_HOST}</div>
       </div>
     ),
     { ...size },

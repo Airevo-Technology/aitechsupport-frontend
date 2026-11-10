@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bot } from "lucide-react";
 import type { PageLink } from "@/lib/content";
+import { SITE_HOST } from "@/lib/site";
 
 export default function Footer({ pages, tagline }: { pages: PageLink[]; tagline: string }) {
   const year = new Date().getFullYear();
@@ -37,7 +38,7 @@ export default function Footer({ pages, tagline }: { pages: PageLink[]; tagline:
           </div>
         </div>
         <div className="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-400 dark:border-slate-800">
-          © {year} AiChatSupport · aichatsupport.my
+          © {year} AiChatSupport · {SITE_HOST}
         </div>
       </div>
     </footer>

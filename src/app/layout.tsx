@@ -3,9 +3,10 @@ import "./globals.css";
 import AppToaster from "@/components/AppToaster";
 import CookieConsent from "@/components/CookieConsent";
 import StagingBanner, { IS_STAGING } from "@/components/StagingBanner";
+import { SITE_URL, SITE_HOST, PROFILE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://aichatsupport.my"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "AiChatSupport — AI Support Chatbot for your website & WhatsApp",
     template: "%s",
@@ -13,11 +14,11 @@ export const metadata: Metadata = {
   description:
     "Connect your content and let an AI assistant answer your customers 24/7 on your website, with a real human handoff when it matters.",
   applicationName: "AiChatSupport",
-  keywords: ["AI chatbot", "customer support", "support automation", "WhatsApp bot", "website chat widget", "Malaysia"],
+  keywords: ["AI chatbot", "customer support", "support automation", "WhatsApp bot", "website chat widget", PROFILE.country],
   openGraph: {
     type: "website",
     siteName: "AiChatSupport",
-    url: "https://aichatsupport.my",
+    url: SITE_URL,
     title: "AiChatSupport — AI Support Chatbot for your website & WhatsApp",
     description: "AI support that answers on your website, with a real human handoff when it matters.",
   },

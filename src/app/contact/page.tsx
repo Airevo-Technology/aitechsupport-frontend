@@ -3,6 +3,7 @@ import { getPageLinks } from "@/lib/content";
 import Nav from "@/components/marketing/Nav";
 import Footer from "@/components/marketing/Footer";
 import ContactForm from "@/components/marketing/ContactForm";
+import { PROFILE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact — AiChatSupport",
@@ -20,7 +21,7 @@ export default async function ContactPage() {
         <p className="mt-3 text-slate-500">Questions about AiChatSupport? Send us a message and we&apos;ll reply by email.</p>
         <ContactForm />
       </main>
-      <Footer pages={pages ?? []} tagline="AI support chatbot for Malaysian businesses." />
+      <Footer pages={pages ?? []} tagline={PROFILE.tagline} />
     </>
   );
 }

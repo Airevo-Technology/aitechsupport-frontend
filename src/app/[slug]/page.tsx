@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getPage, getPageLinks } from "@/lib/content";
 import Nav from "@/components/marketing/Nav";
 import Footer from "@/components/marketing/Footer";
+import { PROFILE } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -31,7 +32,7 @@ export default async function ContentPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: p.body ?? "" }}
         />
       </main>
-      <Footer pages={pages ?? []} tagline="AI support chatbot for Malaysian businesses." />
+      <Footer pages={pages ?? []} tagline={PROFILE.tagline} />
     </>
   );
 }
