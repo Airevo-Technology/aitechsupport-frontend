@@ -16,6 +16,7 @@ import {
   type WhatsappChannelOption,
 } from "@/lib/billing";
 import PayPalCard from "@/components/admin/PayPalCard";
+import AirevoCard from "@/components/admin/AirevoCard";
 
 export default function BillplzPage() {
   const [s, setS] = useState<BillplzSettings | null>(null);
@@ -308,6 +309,8 @@ export default function BillplzPage() {
       </div>
 
       <PayPalCard />
+
+      <AirevoCard />
 
       {/* ===== Bank transfer fallback ===== */}
       <div className="mb-6 mt-10 flex items-center gap-3">

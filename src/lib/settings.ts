@@ -80,3 +80,35 @@ export type FallbackTier = {
   base_url: string | null;
   model: string;
 };
+
+// ----- airevo.com.au marketplace connection (platform admin) -----
+export type AirevoSettings = {
+  enabled: boolean;
+  configured: boolean;
+  sells_paid_plans: boolean;
+  key_id: string;
+  secret_set: boolean;
+  secret_hint: string | null;
+  api_base: string;
+  listing_url: string;
+};
+
+export type AirevoUpdate = {
+  enabled?: boolean;
+  key_id?: string;
+  secret?: string; // blank -> keep existing
+  api_base?: string;
+  listing_url?: string;
+};
+
+export async function getAirevo(): Promise<AirevoSettings> {
+  return (await api.get("/admin/airevo")).data;
+}
+
+export async function updateAirevo(p: AirevoUpdate): Promise<AirevoSettings> {
+  return (await api.put("/admin/airevo", p)).data;
+}
+
+export async function testAirevo(): Promise<void> {
+  await api.post("/admin/airevo/test");
+}
