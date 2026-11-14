@@ -11,10 +11,13 @@ export default function Pricing({
   packages,
   heading,
   subhead,
+  marketplaceUrl,
 }: {
   packages: Pkg[];
   heading: string;
   subhead: string;
+  /** When set, paid plans are bought on airevo.com.au (the Free plan stays here). */
+  marketplaceUrl?: string | null;
 }) {
   const popular = packages.find((p) => p.slug === "pro")?.slug
     ?? packages[Math.min(2, Math.max(0, packages.length - 1))]?.slug;
@@ -62,19 +65,24 @@ export default function Pricing({
                 ))}
               </ul>
               <Link
-                href={`/checkout?plan=${encodeURIComponent(p.slug)}`}
+                href={marketplaceUrl && p.price_myr > 0 ? marketplaceUrl : `/checkout?plan=${encodeURIComponent(p.slug)}`}
                 className={`mt-6 rounded-lg px-4 py-2.5 text-center text-sm font-medium ${
                   isPopular
                     ? "bg-indigo-600 text-white hover:bg-indigo-700"
                     : "border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 }`}
               >
-                {p.price_myr === 0 ? "Start free" : "Choose plan"}
+                {p.price_myr === 0 ? "Start free" : marketplaceUrl ? "Buy on airevo.com.au" : "Choose plan"}
               </Link>
             </div>
           );
         })}
       </div>
+      {marketplaceUrl && (
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Paid plans are sold and invoiced (with GST) by our Australian reseller, Airevo.
+        </p>
+      )}
     </section>
   );
 }

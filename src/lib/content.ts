@@ -50,4 +50,5 @@ async function getJson<T>(path: string, revalidate = 60): Promise<T | null> {
 export const getHomepage = () => getJson<Homepage>("/homepage");
 export const getPackages = () => getJson<Pkg[]>("/packages");
 export const getPageLinks = () => getJson<PageLink[]>("/pages");
+export const getGateways = () => getJson<{ marketplace_url?: string | null }>("/gateways");
 export const getPage = (slug: string) => getJson<PageContent>(`/pages/${encodeURIComponent(slug)}`, 30);

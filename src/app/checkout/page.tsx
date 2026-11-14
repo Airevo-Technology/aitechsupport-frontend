@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { ChevronRight, CreditCard, Info, Loader2, Lock, MailCheck } from "lucide-react";
+import { ChevronRight, CreditCard, ExternalLink, Info, Loader2, Lock, MailCheck } from "lucide-react";
 import Nav from "@/components/marketing/Nav";
 import { checkEmail, checkoutSignup, login, register } from "@/lib/auth";
 import { api, API_URL } from "@/lib/api";
@@ -52,10 +52,15 @@ function CheckoutForm() {
 
   // Which online gateway this deployment uses (null while loading / none enabled).
   const [gateway, setGateway] = useState<"billplz" | "paypal" | null>(null);
+  // Set when paid plans are sold on airevo.com.au instead of a gateway here.
+  const [marketplaceUrl, setMarketplaceUrl] = useState<string | null>(null);
   useEffect(() => {
     fetch(`${API_URL}/api/v1/content/gateways`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((g) => setGateway(g?.primary ?? null))
+      .then((g) => {
+        setGateway(g?.primary ?? null);
+        setMarketplaceUrl(g?.marketplace_url ?? null);
+      })
       .catch(() => setGateway(null));
   }, []);
   const gatewayName = gateway === "paypal" ? "PayPal" : "Billplz";
@@ -173,6 +178,31 @@ function CheckoutForm() {
       setBusy(false);
     }
   };
+
+  if (isPaid && marketplaceUrl) {
+    return (
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <Nav />
+        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
+          <CreditCard size={36} className="mb-4 text-indigo-600" />
+          <h1 className="text-xl font-semibold">{plan?.name} is sold through airevo.com.au</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Airevo is our Australian reseller: it takes the payment, issues your tax invoice with GST and handles
+            renewals. Your AiChatSupport account is set up the moment you subscribe, and you can open it straight from Airevo.
+          </p>
+          <a
+            href={marketplaceUrl}
+            className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Continue to airevo.com.au <ExternalLink size={14} />
+          </a>
+          <Link href="/checkout?plan=free" className="mt-4 text-sm text-slate-500 hover:underline">
+            Or start on the Free plan here
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   if (sent) {
     return (

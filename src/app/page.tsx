@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
 import { Zap, MessageSquare, Users, ShieldCheck, Globe, BarChart3, Sparkles, ArrowRight } from "lucide-react";
-import { getHomepage, getPackages, getPageLinks, type Feature } from "@/lib/content";
+import { getGateways, getHomepage, getPackages, getPageLinks, type Feature } from "@/lib/content";
 import Nav from "@/components/marketing/Nav";
 import Footer from "@/components/marketing/Footer";
 import Pricing from "@/components/marketing/Pricing";
@@ -23,7 +23,7 @@ const ICONS: Record<string, typeof Zap> = {
 };
 
 export default async function Home() {
-  const [h, packages, pages] = await Promise.all([getHomepage(), getPackages(), getPageLinks()]);
+  const [h, packages, pages, gateways] = await Promise.all([getHomepage(), getPackages(), getPageLinks(), getGateways()]);
   if (!h) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-500">
@@ -95,7 +95,7 @@ export default async function Home() {
 
       {/* Pricing */}
       <div className="bg-slate-50 dark:bg-slate-950/40">
-        <Pricing packages={packages ?? []} heading={h.pricing.heading} subhead={h.pricing.subhead} />
+        <Pricing packages={packages ?? []} heading={h.pricing.heading} subhead={h.pricing.subhead} marketplaceUrl={gateways?.marketplace_url} />
       </div>
 
       {/* FAQ */}

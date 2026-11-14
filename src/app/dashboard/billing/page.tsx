@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { CreditCard, Check, Loader2, Zap, Banknote, X } from "lucide-react";
+import { CreditCard, Check, Loader2, Zap, Banknote, X, ExternalLink, PauseCircle } from "lucide-react";
 import {
   listPackages,
   getSubscription,
@@ -172,7 +172,12 @@ export default function BillingPage() {
     : null;
   // Billplz (MYR) is the default when live; otherwise PayPal.
   const primaryGateway: "billplz" | "paypal" | undefined = gateways?.billplz ? "billplz" : gateways?.paypal ? "paypal" : undefined;
-  const dueSoon = isPaidPlan && daysToDue !== null && daysToDue <= 7;
+  // airevo.com.au sells the paid plans here, and owns any plan it sold.
+  const airevoBilled = sub.billing_source === "airevo";
+  const marketplaceUrl = gateways?.marketplace_url ?? null;
+  const viaAirevo = airevoBilled || !!marketplaceUrl;
+  const dueSoon = !airevoBilled && isPaidPlan && daysToDue !== null && daysToDue <= 7;
+  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -189,13 +194,36 @@ export default function BillingPage() {
               <div className="text-lg font-semibold">{sub.plan_name} plan</div>
               <div className="text-xs text-slate-500">
                 Up to {sub.max_bots} bot(s) · status: {sub.status}
-                {sub.next_billing_date && (
+                {!airevoBilled && sub.next_billing_date && (
                   <> · renews {new Date(sub.next_billing_date).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}</>
                 )}
+                {airevoBilled && <> · billed through airevo.com.au{sub.period_end && <> · renews {fmtDate(sub.period_end)}</>}</>}
               </div>
             </div>
           </div>
+          {airevoBilled && sub.manage_url && (
+            <a
+              href={sub.manage_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+            >
+              Manage on airevo.com.au <ExternalLink size={14} />
+            </a>
+          )}
         </div>
+
+        {airevoBilled && sub.status !== "active" && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-700 dark:bg-amber-950/30">
+            <PauseCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+            <div>
+              <div className="font-semibold">Your bots are paused</div>
+              <div className="text-xs text-slate-600 dark:text-slate-300">
+                airevo.com.au couldn&rsquo;t take your last payment. Update your card there and your bots start answering again straight away. Nothing has been deleted.
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-5">
           <div className="mb-1 flex items-center justify-between text-sm">
@@ -292,6 +320,22 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
+              {viaAirevo && (p.price_myr > 0 || airevoBilled) ? (
+                current ? (
+                  <span className="mt-4 cursor-default rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-medium text-slate-400 dark:bg-slate-800">
+                    Current plan
+                  </span>
+                ) : (
+                  <a
+                    href={(airevoBilled ? sub.manage_url : marketplaceUrl) ?? "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                  >
+                    {airevoBilled ? "Change on airevo.com.au" : "Buy on airevo.com.au"} <ExternalLink size={13} />
+                  </a>
+                )
+              ) : (
               <button
                 disabled={(current && p.price_myr === 0) || busy === p.slug}
                 onClick={() => onSubscribe(p.slug, primaryGateway)}
@@ -307,7 +351,8 @@ export default function BillingPage() {
                     ? p.price_myr === 0 ? "Current plan" : "Renew / pay now"
                     : p.price_myr === 0 ? "Switch to Free" : "Choose plan"}
               </button>
-              {p.price_myr > 0 && gateways?.billplz && gateways.paypal && (
+              )}
+              {!viaAirevo && p.price_myr > 0 && gateways?.billplz && gateways.paypal && (
                 <button
                   disabled={busy === p.slug}
                   onClick={() => onSubscribe(p.slug, "paypal")}
@@ -316,7 +361,7 @@ export default function BillingPage() {
                   Pay with PayPal
                 </button>
               )}
-              {p.price_myr > 0 && bankTransfer && (
+              {!viaAirevo && p.price_myr > 0 && bankTransfer && (
                 <button
                   onClick={() => setReportingSlug(p.slug)}
                   className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -328,10 +373,18 @@ export default function BillingPage() {
           );
         })}
       </div>
+      {viaAirevo ? (
+      <p className="mt-4 text-xs text-slate-500">
+        Paid plans are sold, billed and invoiced (with GST) by Airevo on airevo.com.au, which also handles plan changes,
+        card updates and cancellations. Your plan updates here automatically.{" "}
+        {airevoBilled ? "To move to Free, cancel on airevo.com.au; you keep everything and drop to Free at the end of the period." : "The Free plan stays here and needs no card."}
+      </p>
+      ) : (
       <p className="mt-4 text-xs text-slate-500">
         Paid plans are billed securely through {[gateways?.billplz && "Billplz (FPX / card)", gateways?.paypal && "PayPal", bankTransfer && "manual bank transfer"].filter(Boolean).join(", or ") || "our team"}.
         Your plan activates once payment is confirmed. Switching to Free takes effect immediately.
       </p>
+      )}
 
       {/* Bank transfer instructions + report modal */}
       {reportingSlug && bankTransfer && (

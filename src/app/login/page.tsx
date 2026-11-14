@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { LogIn } from "lucide-react";
 import { login } from "@/lib/auth";
+
+/** Shown when airevo.com.au's "Open app" can't sign the customer in directly
+ *  (an account that existed before the purchase, or a paused subscription). */
+function AirevoNotice() {
+  if (useSearchParams().get("from") !== "airevo") return null;
+  return (
+    <p className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+      Coming from airevo.com.au? Sign in with your AiChatSupport email and password. New here? Use the
+      link in your welcome email, or <Link href="/forgot-password" className="font-medium underline">reset your password</Link>.
+    </p>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +49,9 @@ export default function LoginPage() {
           <h1 className="text-xl font-semibold">Sign in</h1>
           <p className="mt-1 text-sm text-slate-500">AiChatSupport dashboard</p>
         </div>
+        <Suspense fallback={null}>
+          <AirevoNotice />
+        </Suspense>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium">Email</label>
