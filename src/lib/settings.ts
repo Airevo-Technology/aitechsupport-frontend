@@ -10,7 +10,7 @@ export type SettingsOut = {
   fonnte_account_token_set: boolean;
   fonnte_account_token_hint: string | null;
   field_encryption_key_set: boolean;
-  embeddings_provider: "voyage" | "openrouter" | "huggingface";
+  embeddings_provider: "voyage" | "openrouter" | "huggingface" | "ollama";
   embedding_model_openrouter_main: string;
   embedding_model_openrouter_fallback_1: string;
   embedding_model_openrouter_fallback_2: string;
@@ -39,7 +39,7 @@ export type SettingsUpdate = {
   default_chat_model?: string;
   fonnte_account_token?: string;
   field_encryption_key?: string;
-  embeddings_provider?: "voyage" | "openrouter" | "huggingface";
+  embeddings_provider?: "voyage" | "openrouter" | "huggingface" | "ollama";
   embedding_model_openrouter_main?: string;
   embedding_model_openrouter_fallback_1?: string;
   embedding_model_openrouter_fallback_2?: string;

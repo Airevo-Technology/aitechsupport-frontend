@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { FileText, Loader2, ShieldAlert, ChevronRight, Eye } from "lucide-react";
 import { listTemplates, updateTemplate, previewTemplate, type EmailTemplate } from "@/lib/email";
+import EmailBodyEditor, { type EmailBodyEditorHandle } from "@/components/admin/EmailBodyEditor";
 
 const VARS: Record<string, string[]> = {
   welcome: ["{name}", "{email}", "{dashboard_url}"],
@@ -20,6 +21,12 @@ export default function EmailTemplatesPage() {
 
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  // Visual (Quill) or raw HTML. `visualNonce` remounts the visual editor so it re-reads `body`
+  // after the HTML tab changed it.
+  const [mode, setMode] = useState<"visual" | "html">("visual");
+  const [visualNonce, setVisualNonce] = useState(0);
+  const editorRef = useRef<EmailBodyEditorHandle>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Server-rendered preview (content wrapped in the branded shell, sample values filled).
   const [preview, setPreview] = useState<{ subject: string; html: string }>({ subject: "", html: "" });
@@ -57,6 +64,28 @@ export default function EmailTemplatesPage() {
     setSelected(t);
     setSubject(t.subject);
     setBody(t.body_html);
+  };
+
+  const switchMode = (next: "visual" | "html") => {
+    if (next === mode) return;
+    if (next === "visual") setVisualNonce((n) => n + 1);
+    setMode(next);
+  };
+
+  const insertVariable = (v: string) => {
+    if (mode === "visual") {
+      editorRef.current?.insertText(v);
+      return;
+    }
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? body.length;
+    const end = ta.selectionEnd ?? body.length;
+    setBody(body.slice(0, start) + v + body.slice(end));
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + v.length, start + v.length);
+    });
   };
 
   const save = async (e: React.FormEvent) => {
@@ -128,9 +157,15 @@ export default function EmailTemplatesPage() {
             <div className="flex flex-wrap gap-1.5">
               <span className="text-xs text-slate-500">Variables:</span>
               {(VARS[selected.key] || []).map((v) => (
-                <code key={v} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => insertVariable(v)}
+                  title="Insert at cursor"
+                  className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-indigo-950"
+                >
                   {v}
-                </code>
+                </button>
               ))}
             </div>
             <div>
@@ -138,8 +173,45 @@ export default function EmailTemplatesPage() {
               <input value={subject} onChange={(e) => setSubject(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Body (HTML)</label>
-              <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12} className={`${inputCls} font-mono text-xs`} />
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-sm font-medium">Body</label>
+                <div className="inline-flex rounded-lg border border-slate-200 p-0.5 text-xs dark:border-slate-700">
+                  {(["visual", "html"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => switchMode(m)}
+                      className={`rounded-md px-2.5 py-1 font-medium transition ${
+                        mode === m ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      {m === "visual" ? "Visual" : "HTML"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {mode === "visual" ? (
+                <>
+                  <EmailBodyEditor
+                    key={`${selected.key}-${visualNonce}`}
+                    ref={editorRef}
+                    initialHtml={body}
+                    onChange={setBody}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Buttons and other tables stay intact as locked blocks. Use the HTML tab to change a button or fine-tune styling.
+                    Existing styling is only re-applied once you edit.
+                  </p>
+                </>
+              ) : (
+                <textarea
+                  ref={textareaRef}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  rows={12}
+                  className={`${inputCls} font-mono text-xs`}
+                />
+              )}
             </div>
 
             <div>

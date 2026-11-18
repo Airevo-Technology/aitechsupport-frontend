@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const [evolutionUrl, setEvolutionUrl] = useState("");
   const [evolutionKey, setEvolutionKey] = useState("");
   const [waProvider, setWaProvider] = useState<"fonnte" | "evolution">("fonnte");
-  const [embeddingsProvider, setEmbeddingsProvider] = useState<"voyage" | "openrouter" | "huggingface">("voyage");
+  const [embeddingsProvider, setEmbeddingsProvider] = useState<"voyage" | "openrouter" | "huggingface" | "ollama">("voyage");
   const [embeddingMain, setEmbeddingMain] = useState("");
   const [embeddingFallback1, setEmbeddingFallback1] = useState("");
   const [embeddingFallback2, setEmbeddingFallback2] = useState("");
@@ -137,8 +137,9 @@ export default function SettingsPage() {
       setEvolutionKey("");
       setEncryptionKey("");
       toast.success("Settings saved");
-    } catch {
-      toast.error("Failed to save");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? `Failed to save: ${detail}` : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -196,12 +197,13 @@ export default function SettingsPage() {
           <label className="mb-1 block text-sm font-medium">Embedding model provider</label>
           <select
             value={embeddingsProvider}
-            onChange={(e) => setEmbeddingsProvider(e.target.value as "voyage" | "openrouter" | "huggingface")}
+            onChange={(e) => setEmbeddingsProvider(e.target.value as "voyage" | "openrouter" | "huggingface" | "ollama")}
             className={inputCls}
           >
             <option value="voyage">Voyage AI</option>
             <option value="openrouter">OpenRouter</option>
             <option value="huggingface">Hugging Face</option>
+            <option value="ollama">Ollama (self-hosted)</option>
           </select>
           <p className="mt-1 text-xs text-slate-500">
             Used for knowledge-base search. Voyage AI&apos;s free tier is rate-limited (3 RPM /
