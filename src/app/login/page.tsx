@@ -7,13 +7,13 @@ import { toast } from "react-hot-toast";
 import { LogIn } from "lucide-react";
 import { login } from "@/lib/auth";
 
-/** Shown when airevo.com.au's "Open app" can't sign the customer in directly
+/** Shown when the Airevo marketplace's "Open app" can't sign the customer in directly
  *  (an account that existed before the purchase, or a paused subscription). */
 function AirevoNotice() {
   if (useSearchParams().get("from") !== "airevo") return null;
   return (
     <p className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
-      Coming from airevo.com.au? Sign in with your AiChatSupport email and password. New here? Use the
+      Coming from Airevo? Sign in with your AiChatSupport email and password. New here? Use the
       link in your welcome email, or <Link href="/forgot-password" className="font-medium underline">reset your password</Link>.
     </p>
   );

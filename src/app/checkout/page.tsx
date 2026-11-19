@@ -11,6 +11,7 @@ import { api, API_URL } from "@/lib/api";
 import type { Pkg } from "@/lib/content";
 import { price } from "@/lib/money";
 import { PROFILE } from "@/lib/site";
+import { marketplaceFor } from "@/lib/marketplace";
 
 const inputCls =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-800";
@@ -52,7 +53,7 @@ function CheckoutForm() {
 
   // Which online gateway this deployment uses (null while loading / none enabled).
   const [gateway, setGateway] = useState<"billplz" | "paypal" | null>(null);
-  // Set when paid plans are sold on airevo.com.au instead of a gateway here.
+  // Set when paid plans are sold on the Airevo marketplace instead of a gateway here.
   const [marketplaceUrl, setMarketplaceUrl] = useState<string | null>(null);
   useEffect(() => {
     fetch(`${API_URL}/api/v1/content/gateways`)
@@ -180,21 +181,22 @@ function CheckoutForm() {
   };
 
   if (isPaid && marketplaceUrl) {
+    const mk = marketplaceFor(marketplaceUrl);
     return (
       <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Nav />
         <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
           <CreditCard size={36} className="mb-4 text-indigo-600" />
-          <h1 className="text-xl font-semibold">{plan?.name} is sold through airevo.com.au</h1>
+          <h1 className="text-xl font-semibold">{plan?.name} is sold through {mk.site}</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Airevo is our Australian reseller: it takes the payment, issues your tax invoice with GST and handles
+            Airevo is our {mk.country ? `${mk.country} ` : ""}reseller: it takes the payment, issues your tax invoice with {mk.tax} and handles
             renewals. Your AiChatSupport account is set up the moment you subscribe, and you can open it straight from Airevo.
           </p>
           <a
             href={marketplaceUrl}
             className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
           >
-            Continue to airevo.com.au <ExternalLink size={14} />
+            Continue to {mk.site} <ExternalLink size={14} />
           </a>
           <Link href="/checkout?plan=free" className="mt-4 text-sm text-slate-500 hover:underline">
             Or start on the Free plan here

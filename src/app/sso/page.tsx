@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { TOKEN_KEY } from "@/lib/api";
 
 /**
- * Landing page for "Open app" on airevo.com.au. The backend has already checked
+ * Landing page for "Open app" on the Airevo marketplace (airevo.com.au / airevo.my). The backend has already checked
  * Airevo's one-time token and passes our own access token in the URL fragment,
  * which browsers never send to a server, so it stays out of logs and Referers.
  */

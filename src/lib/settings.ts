@@ -81,7 +81,7 @@ export type FallbackTier = {
   model: string;
 };
 
-// ----- airevo.com.au marketplace connection (platform admin) -----
+// ----- Airevo marketplace connection (platform admin) -----
 export type AirevoSettings = {
   enabled: boolean;
   configured: boolean;

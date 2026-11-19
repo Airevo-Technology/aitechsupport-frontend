@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import type { Pkg } from "@/lib/content";
 import { price } from "@/lib/money";
+import { marketplaceFor } from "@/lib/marketplace";
 
 function priceLabel(p: Pkg): string {
   return p.price_myr === 0 ? "Free" : price(p.price_myr, p.currency);
@@ -16,11 +17,12 @@ export default function Pricing({
   packages: Pkg[];
   heading: string;
   subhead: string;
-  /** When set, paid plans are bought on airevo.com.au (the Free plan stays here). */
+  /** When set, paid plans are bought on the Airevo marketplace (the Free plan stays here). */
   marketplaceUrl?: string | null;
 }) {
   const popular = packages.find((p) => p.slug === "pro")?.slug
     ?? packages[Math.min(2, Math.max(0, packages.length - 1))]?.slug;
+  const mk = marketplaceFor(marketplaceUrl);
 
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
@@ -72,7 +74,7 @@ export default function Pricing({
                     : "border border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 }`}
               >
-                {p.price_myr === 0 ? "Start free" : marketplaceUrl ? "Buy on airevo.com.au" : "Choose plan"}
+                {p.price_myr === 0 ? "Start free" : marketplaceUrl ? `Buy on ${mk.site}` : "Choose plan"}
               </Link>
             </div>
           );
@@ -80,7 +82,7 @@ export default function Pricing({
       </div>
       {marketplaceUrl && (
         <p className="mt-6 text-center text-sm text-slate-500">
-          Paid plans are sold and invoiced (with GST) by our Australian reseller, Airevo.
+          Paid plans are sold and invoiced (with {mk.tax}) by our {mk.country ? `${mk.country} ` : ""}reseller, Airevo, on {mk.site}.
         </p>
       )}
     </section>

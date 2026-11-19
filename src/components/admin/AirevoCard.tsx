@@ -21,7 +21,7 @@ function SetBadge({ ok }: { ok: boolean }) {
   );
 }
 
-/** airevo.com.au marketplace connection, for the Payments admin page. */
+/** Airevo marketplace connection (airevo.com.au or airevo.my), for the Payments admin page. */
 export default function AirevoCard() {
   const [s, setS] = useState<AirevoSettings | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -92,7 +92,7 @@ export default function AirevoCard() {
         <div>
           <h2 className="text-2xl font-semibold">Airevo marketplace</h2>
           <p className="text-sm text-slate-500">
-            Sell paid plans through airevo.com.au. Airevo takes the payment and tells this site to create, upgrade,
+            Sell paid plans through the Airevo marketplace (airevo.com.au or airevo.my). Airevo takes the payment and tells this site to create, upgrade,
             suspend or end the customer&rsquo;s account.
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function AirevoCard() {
         <div>
           <label className="mb-1 block text-sm font-medium">Airevo API base</label>
           <input value={apiBase} onChange={(e) => setApiBase(e.target.value)} className={`${inputCls} font-mono`} autoComplete="off" />
-          <p className="mt-1 text-xs text-slate-400">Leave as is unless you are testing against an Airevo staging site.</p>
+          <p className="mt-1 text-xs text-slate-400">Australia: https://airevo.com.au/api/marketplace/v1 · Malaysia: https://airevo.my/api/marketplace/v1. Customers see this site&rsquo;s name on billing pages.</p>
         </div>
 
         <div>
@@ -143,7 +143,7 @@ export default function AirevoCard() {
             onChange={(e) => setListingUrl(e.target.value)}
             className={`${inputCls} font-mono`}
             autoComplete="off"
-            placeholder="https://airevo.com.au/marketplace/aichatsupport"
+            placeholder="https://airevo.my/marketplace/aichatsupport-my"
           />
           <div className="mt-2 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
             <AlertTriangle size={14} className="mt-0.5 shrink-0" />

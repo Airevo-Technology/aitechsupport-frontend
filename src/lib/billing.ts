@@ -32,11 +32,11 @@ export type Subscription = {
   next_billing_date: string | null;
   /** 0-100: % off every paid checkout/renewal from active paid referrals. */
   referral_discount_percent: number;
-  /** "airevo" = sold and billed by airevo.com.au; change or cancel it there. */
+  /** "airevo" = sold and billed by the Airevo marketplace; change or cancel it there. */
   billing_source?: "direct" | "airevo";
   /** Airevo's current period end (renewal date) for airevo-billed plans. */
   period_end?: string | null;
-  /** The customer's own subscription page on airevo.com.au. */
+  /** The customer's own subscription page on the Airevo marketplace. */
   manage_url?: string | null;
 };
 
@@ -146,7 +146,7 @@ export type Gateways = {
   billplz: boolean;
   paypal: boolean;
   bank_transfer: boolean;
-  /** Set when paid plans are bought on airevo.com.au instead of here. */
+  /** Set when paid plans are bought on the Airevo marketplace instead of here. */
   marketplace_url?: string | null;
 };
 export async function getGateways(): Promise<Gateways> {

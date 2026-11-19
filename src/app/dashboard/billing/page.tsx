@@ -17,6 +17,7 @@ import {
   type Gateways,
 } from "@/lib/billing";
 import { price, priceFromCents } from "@/lib/money";
+import { marketplaceFor } from "@/lib/marketplace";
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
@@ -172,10 +173,11 @@ export default function BillingPage() {
     : null;
   // Billplz (MYR) is the default when live; otherwise PayPal.
   const primaryGateway: "billplz" | "paypal" | undefined = gateways?.billplz ? "billplz" : gateways?.paypal ? "paypal" : undefined;
-  // airevo.com.au sells the paid plans here, and owns any plan it sold.
+  // The Airevo marketplace sells the paid plans here, and owns any plan it sold.
   const airevoBilled = sub.billing_source === "airevo";
   const marketplaceUrl = gateways?.marketplace_url ?? null;
   const viaAirevo = airevoBilled || !!marketplaceUrl;
+  const mk = marketplaceFor(sub.manage_url ?? marketplaceUrl);
   const dueSoon = !airevoBilled && isPaidPlan && daysToDue !== null && daysToDue <= 7;
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
@@ -197,7 +199,7 @@ export default function BillingPage() {
                 {!airevoBilled && sub.next_billing_date && (
                   <> · renews {new Date(sub.next_billing_date).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}</>
                 )}
-                {airevoBilled && <> · billed through airevo.com.au{sub.period_end && <> · renews {fmtDate(sub.period_end)}</>}</>}
+                {airevoBilled && <> · billed through {mk.site}{sub.period_end && <> · renews {fmtDate(sub.period_end)}</>}</>}
               </div>
             </div>
           </div>
@@ -208,7 +210,7 @@ export default function BillingPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
             >
-              Manage on airevo.com.au <ExternalLink size={14} />
+              Manage on {mk.site} <ExternalLink size={14} />
             </a>
           )}
         </div>
@@ -219,7 +221,7 @@ export default function BillingPage() {
             <div>
               <div className="font-semibold">Your bots are paused</div>
               <div className="text-xs text-slate-600 dark:text-slate-300">
-                airevo.com.au couldn&rsquo;t take your last payment. Update your card there and your bots start answering again straight away. Nothing has been deleted.
+                {mk.site} couldn&rsquo;t take your last payment. Update your card there and your bots start answering again straight away. Nothing has been deleted.
               </div>
             </div>
           </div>
@@ -332,7 +334,7 @@ export default function BillingPage() {
                     rel="noopener noreferrer"
                     className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                   >
-                    {airevoBilled ? "Change on airevo.com.au" : "Buy on airevo.com.au"} <ExternalLink size={13} />
+                    {airevoBilled ? `Change on ${mk.site}` : `Buy on ${mk.site}`} <ExternalLink size={13} />
                   </a>
                 )
               ) : (
@@ -375,9 +377,9 @@ export default function BillingPage() {
       </div>
       {viaAirevo ? (
       <p className="mt-4 text-xs text-slate-500">
-        Paid plans are sold, billed and invoiced (with GST) by Airevo on airevo.com.au, which also handles plan changes,
+        Paid plans are sold, billed and invoiced (with {mk.tax}) by Airevo on {mk.site}, which also handles plan changes,
         card updates and cancellations. Your plan updates here automatically.{" "}
-        {airevoBilled ? "To move to Free, cancel on airevo.com.au; you keep everything and drop to Free at the end of the period." : "The Free plan stays here and needs no card."}
+        {airevoBilled ? `To move to Free, cancel on ${mk.site}; you keep everything and drop to Free at the end of the period.` : "The Free plan stays here and needs no card."}
       </p>
       ) : (
       <p className="mt-4 text-xs text-slate-500">
