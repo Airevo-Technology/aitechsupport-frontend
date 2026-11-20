@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
-import { Zap, MessageSquare, Users, ShieldCheck, Globe, BarChart3, Sparkles, ArrowRight } from "lucide-react";
+import { Zap, MessageSquare, Users, ShieldCheck, Globe, BarChart3, Phone, Sparkles, ArrowRight } from "lucide-react";
 import { getGateways, getHomepage, getPackages, getPageLinks, type Feature } from "@/lib/content";
 import Nav from "@/components/marketing/Nav";
 import Footer from "@/components/marketing/Footer";
@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const ICONS: Record<string, typeof Zap> = {
-  bolt: Zap, chat: MessageSquare, user: Users, shield: ShieldCheck, globe: Globe, chart: BarChart3,
+  bolt: Zap, chat: MessageSquare, user: Users, shield: ShieldCheck, globe: Globe, chart: BarChart3, phone: Phone,
 };
 
 export default async function Home() {
