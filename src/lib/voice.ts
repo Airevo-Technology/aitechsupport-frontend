@@ -161,6 +161,8 @@ export const searchVoiceNumbers = async (id: number, locality: string): Promise<
   (await api.get(`/admin/voice/lines/${id}/numbers`, { params: { locality } })).data;
 export const orderVoiceNumber = async (id: number, phone_number: string): Promise<AdminVoiceLine> =>
   (await api.post(`/admin/voice/lines/${id}/order`, { phone_number })).data;
+export const adoptVoiceNumber = async (id: number, phone_number: string): Promise<AdminVoiceLine> =>
+  (await api.post(`/admin/voice/lines/${id}/adopt`, { phone_number })).data;
 export const syncVoiceLine = async (id: number): Promise<AdminVoiceLine> => (await api.post(`/admin/voice/lines/${id}/sync`)).data;
 export const activateVoiceLine = async (id: number): Promise<AdminVoiceLine> =>
   (await api.post(`/admin/voice/lines/${id}/activate`)).data;

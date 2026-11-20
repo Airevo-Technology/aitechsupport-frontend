@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { Loader2, PhoneCall, Play, Pause, RefreshCw, Trash2, FileText, Search } from "lucide-react";
 import {
   activateVoiceLine,
+  adoptVoiceNumber,
   addCatalogVoice,
   createVoiceWebhook,
   formatAu,
@@ -94,6 +95,7 @@ function LineCard({ line, onChange }: { line: AdminVoiceLine; onChange: (l: Admi
   const [city, setCity] = useState(line.preferred_locality || "Sydney");
   const [numbers, setNumbers] = useState<AvailableNumber[] | null>(null);
   const [note, setNote] = useState("");
+  const [existing, setExisting] = useState("");
   const s = STATUS_TEXT[line.status];
 
   const run = async (name: string, fn: () => Promise<AdminVoiceLine>, ok: string) => {
@@ -170,7 +172,7 @@ function LineCard({ line, onChange }: { line: AdminVoiceLine; onChange: (l: Admi
               <FileText size={14} className="inline" /> Document
             </button>
           )}
-          {["ordered", "info_needed"].includes(line.status) && line.telnyx_number_order_id && (
+          {["ordered", "info_needed"].includes(line.status) && line.phone_number && (
             <button className={btn} disabled={!!busy} onClick={() => run("Sync", () => syncVoiceLine(line.id), "Status refreshed from Telnyx")}>
               {busy === "Sync" ? "Checking…" : "Check Telnyx"}
             </button>
@@ -206,6 +208,22 @@ function LineCard({ line, onChange }: { line: AdminVoiceLine; onChange: (l: Admi
             </div>
             <button className={btn} disabled={!!busy} onClick={search}>
               <Search size={14} className="inline" /> {busy === "search" ? "Searching…" : "Find numbers"}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Or use a number already on the Telnyx account</label>
+              <input className={`${input} w-56 font-mono`} value={existing} onChange={(e) => setExisting(e.target.value)} placeholder="+61 2 8390 2245" />
+            </div>
+            <button
+              className={btn}
+              disabled={!existing.trim() || !!busy}
+              onClick={() => {
+                if (confirm(`Use ${existing} for this line? It will be routed to the ElevenLabs SIP connection.`))
+                  run("Use number", () => adoptVoiceNumber(line.id, existing), "Number attached to this line");
+              }}
+            >
+              Use this number
             </button>
           </div>
           {numbers && (
