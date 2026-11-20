@@ -13,6 +13,9 @@ export type Package = {
   sort_order: number;
   /** Whether a bot on this plan can connect WhatsApp (Fonnte) at all. */
   whatsapp_enabled: boolean;
+  /** AI phone line on this plan, and the call minutes included each month. */
+  voice_enabled: boolean;
+  monthly_voice_minutes: number;
   /** Ordered chat fallback chain for this plan — models tried top to bottom until
    *  one answers. Null means it inherits the platform-wide chain from Settings. */
   fallback_chain: FallbackTier[] | null;

@@ -24,6 +24,8 @@ const empty: PackageUpsert = {
   is_active: true,
   sort_order: 0,
   whatsapp_enabled: true,
+  voice_enabled: false,
+  monthly_voice_minutes: 0,
   fallback_chain: null,
 };
 
@@ -191,6 +193,28 @@ export default function AdminPackagesPage() {
             />
             WhatsApp connection allowed on this plan
           </label>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.voice_enabled}
+                onChange={(e) => setForm({ ...form, voice_enabled: e.target.checked })}
+              />
+              AI phone line on this plan
+            </label>
+            {form.voice_enabled && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="number"
+                  min={0}
+                  value={form.monthly_voice_minutes}
+                  onChange={(e) => setForm({ ...form, monthly_voice_minutes: Math.max(0, Number(e.target.value) || 0) })}
+                  className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-950"
+                />
+                call minutes / month
+              </label>
+            )}
+          </div>
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
               {saving ? "Saving…" : "Save"}
